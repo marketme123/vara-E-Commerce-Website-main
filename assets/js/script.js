@@ -124,6 +124,9 @@ document.addEventListener("DOMContentLoaded", () => {
   // --- EVENT LISTENERS FOR PRODUCT CARDS & DETAILS PAGE ---
   const initializeProductListeners = () => {
     document.querySelectorAll(".product-item, .details-container").forEach(container => {
+      // *** FIX: Use a unique image source for the product ID ***
+      const imageSrc = (container.querySelector(".product-img.default") || container.querySelector(".detials-img")).src;
+
       // Add to Cart Listener
       const cartBtn = container.querySelector(".cart-btn, .details-action .btn");
       if (cartBtn) {
@@ -133,10 +136,10 @@ document.addEventListener("DOMContentLoaded", () => {
           const quantityInput = productEl.querySelector(".quantity");
           
           const product = {
-            id: productEl.querySelector(".product-title, .details-title").textContent.trim(),
+            id: imageSrc, // Use unique image src as ID
             title: productEl.querySelector(".product-title, .details-title").textContent.trim(),
             price: parseFloat(productEl.querySelector(".new-price").textContent.replace("$", "")),
-            image: (productEl.querySelector(".product-img.default") || productEl.querySelector(".detials-img")).src,
+            image: imageSrc,
             quantity: quantityInput ? parseInt(quantityInput.value) : 1,
           };
           addToCart(product);
@@ -150,11 +153,11 @@ document.addEventListener("DOMContentLoaded", () => {
                 e.preventDefault();
                 const productEl = e.target.closest('.product-item, .details-container');
                 const product = {
-                    id: productEl.querySelector('.product-title, .details-title').textContent.trim(),
+                    id: imageSrc, // Use unique image src as ID
                     title: productEl.querySelector('.product-title, .details-title').textContent.trim(),
                     price: parseFloat(productEl.querySelector('.new-price').textContent.replace('$', '')),
-                    image: (productEl.querySelector('.product-img.default') || productEl.querySelector('.detials-img')).src,
-                    quantity: 1, // Wishlist doesn't need quantity but good to have
+                    image: imageSrc,
+                    quantity: 1,
                 };
                 addToWishlist(product);
            });
@@ -169,6 +172,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // --- RENDER CART PAGE ---
   const renderCartPage = () => {
     const cartItemsContainer = document.getElementById("cart-items");
+    if (!cartItemsContainer) return; // Don't run on pages without a cart table
     const cart = getCart();
     cartItemsContainer.innerHTML = ""; // Clear existing content
 
@@ -193,10 +197,11 @@ document.addEventListener("DOMContentLoaded", () => {
     addCartManagementListeners();
   };
   
+  // *** THIS FUNCTION NOW CORRECTLY CALCULATES THE TOTAL OF ALL ITEMS ***
   const updateCartTotals = () => {
       const cart = getCart();
       const subtotal = cart.reduce((total, item) => total + item.price * item.quantity, 0);
-      const shipping = 10.00; // Example fixed shipping
+      const shipping = cart.length > 0 ? 10.00 : 0; // Only add shipping if cart has items
       const total = subtotal + shipping;
       
       const subtotalEl = document.querySelector('.cart-total-table tr:nth-child(1) .cart-total-price');
@@ -207,8 +212,18 @@ document.addEventListener("DOMContentLoaded", () => {
       if(shippingEl) shippingEl.textContent = `$${shipping.toFixed(2)}`;
       if(totalEl) totalEl.textContent = `$${total.toFixed(2)}`;
   };
+  
+  // *** NEW: Function to clear the cart with confirmation ***
+  const clearCart = () => {
+      if (confirm("Are you sure you want to empty your shopping cart?")) {
+          saveCart([]); // Save an empty array
+          renderCartPage();
+          updateHeaderCounts();
+      }
+  };
 
   const addCartManagementListeners = () => {
+    // Listener for remove buttons
     document.querySelectorAll(".table-trash").forEach(button => {
       button.addEventListener("click", (e) => {
         const itemId = e.target.getAttribute("data-id");
@@ -219,6 +234,7 @@ document.addEventListener("DOMContentLoaded", () => {
       });
     });
 
+    // Listener for quantity inputs
     document.querySelectorAll("#cart-items .quantity").forEach(input => {
       input.addEventListener("change", (e) => {
         const itemId = e.target.getAttribute("data-id");
@@ -227,16 +243,26 @@ document.addEventListener("DOMContentLoaded", () => {
         const itemIndex = cart.findIndex(item => item.id === itemId);
         if (itemIndex > -1 && newQuantity > 0) {
           cart[itemIndex].quantity = newQuantity;
+          saveCart(cart);
+          renderCartPage();
         }
-        saveCart(cart);
-        renderCartPage();
       });
     });
+
+    // *** NEW: Add event listener for the Clear Cart button ***
+    const clearCartBtn = document.getElementById('clear-cart-btn');
+    if (clearCartBtn) {
+        clearCartBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            clearCart();
+        });
+    }
   };
 
   // --- RENDER WISHLIST PAGE ---
   const renderWishlistPage = () => {
       const wishlistContainer = document.getElementById('wishlist-items');
+      if (!wishlistContainer) return; // Don't run on other pages
       const wishlist = getWishlist();
       wishlistContainer.innerHTML = '';
 
@@ -280,11 +306,10 @@ document.addEventListener("DOMContentLoaded", () => {
             const itemToMove = wishlist.find(item => item.id === itemId);
             
             if (itemToMove) {
-                addToCart(itemToMove); // Add to cart
-                // Remove from wishlist
+                addToCart(itemToMove);
                 const newWishlist = wishlist.filter(item => item.id !== itemId);
                 saveWishlist(newWishlist);
-                renderWishlistPage(); // Re-render the wishlist page
+                renderWishlistPage();
             }
         });
     });
@@ -293,6 +318,8 @@ document.addEventListener("DOMContentLoaded", () => {
   // --- RENDER CHECKOUT PAGE ---
   const renderCheckoutPage = () => {
       const orderItemsContainer = document.getElementById('checkout-order-items');
+      if (!orderItemsContainer) return; // Don't run on other pages
+      
       const subtotalEl = document.getElementById('checkout-subtotal');
       const totalEl = document.getElementById('checkout-total');
       const cart = getCart();
@@ -319,15 +346,14 @@ document.addEventListener("DOMContentLoaded", () => {
       totalEl.textContent = `$${total.toFixed(2)}`;
   };
 
-
   /* ================================================
      INITIALIZATION
      ================================================ */
   updateHeaderCounts();
   initializeProductListeners();
   
-  if (document.getElementById("cart-items")) renderCartPage();
-  if (document.getElementById("wishlist-items")) renderWishlistPage();
-  if (document.getElementById("checkout-order-items")) renderCheckoutPage();
+  renderCartPage();
+  renderWishlistPage();
+  renderCheckoutPage();
 
 });
