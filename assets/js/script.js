@@ -124,10 +124,10 @@ document.addEventListener("DOMContentLoaded", () => {
   // --- EVENT LISTENERS FOR PRODUCT CARDS & DETAILS PAGE ---
   const initializeProductListeners = () => {
     document.querySelectorAll(".product-item, .details-container").forEach(container => {
-      // *** FIX: Use a unique image source for the product ID ***
-      const imageSrc = (container.querySelector(".product-img.default") || container.querySelector(".detials-img")).src;
+      const imageEl = container.querySelector(".product-img.default") || container.querySelector(".detials-img");
+      if (!imageEl) return;
+      const imageSrc = imageEl.src;
 
-      // Add to Cart Listener
       const cartBtn = container.querySelector(".cart-btn, .details-action .btn");
       if (cartBtn) {
         cartBtn.addEventListener("click", (e) => {
@@ -136,7 +136,7 @@ document.addEventListener("DOMContentLoaded", () => {
           const quantityInput = productEl.querySelector(".quantity");
           
           const product = {
-            id: imageSrc, // Use unique image src as ID
+            id: imageSrc,
             title: productEl.querySelector(".product-title, .details-title").textContent.trim(),
             price: parseFloat(productEl.querySelector(".new-price").textContent.replace("$", "")),
             image: imageSrc,
@@ -146,14 +146,13 @@ document.addEventListener("DOMContentLoaded", () => {
         });
       }
       
-      // Add to Wishlist Listener
       const wishlistBtn = container.querySelector('a[aria-label="Add to Wishlist"], .detials-action-btn');
        if(wishlistBtn) {
            wishlistBtn.addEventListener('click', (e) => {
                 e.preventDefault();
                 const productEl = e.target.closest('.product-item, .details-container');
                 const product = {
-                    id: imageSrc, // Use unique image src as ID
+                    id: imageSrc,
                     title: productEl.querySelector('.product-title, .details-title').textContent.trim(),
                     price: parseFloat(productEl.querySelector('.new-price').textContent.replace('$', '')),
                     image: imageSrc,
@@ -172,9 +171,9 @@ document.addEventListener("DOMContentLoaded", () => {
   // --- RENDER CART PAGE ---
   const renderCartPage = () => {
     const cartItemsContainer = document.getElementById("cart-items");
-    if (!cartItemsContainer) return; // Don't run on pages without a cart table
+    if (!cartItemsContainer) return;
     const cart = getCart();
-    cartItemsContainer.innerHTML = ""; // Clear existing content
+    cartItemsContainer.innerHTML = "";
 
     if (cart.length === 0) {
       cartItemsContainer.innerHTML = '<tr><td colspan="6">Your cart is empty.</td></tr>';
@@ -197,11 +196,10 @@ document.addEventListener("DOMContentLoaded", () => {
     addCartManagementListeners();
   };
   
-  // *** THIS FUNCTION NOW CORRECTLY CALCULATES THE TOTAL OF ALL ITEMS ***
   const updateCartTotals = () => {
       const cart = getCart();
       const subtotal = cart.reduce((total, item) => total + item.price * item.quantity, 0);
-      const shipping = cart.length > 0 ? 10.00 : 0; // Only add shipping if cart has items
+      const shipping = cart.length > 0 ? 10.00 : 0;
       const total = subtotal + shipping;
       
       const subtotalEl = document.querySelector('.cart-total-table tr:nth-child(1) .cart-total-price');
@@ -213,17 +211,15 @@ document.addEventListener("DOMContentLoaded", () => {
       if(totalEl) totalEl.textContent = `$${total.toFixed(2)}`;
   };
   
-  // *** NEW: Function to clear the cart with confirmation ***
   const clearCart = () => {
       if (confirm("Are you sure you want to empty your shopping cart?")) {
-          saveCart([]); // Save an empty array
+          saveCart([]);
           renderCartPage();
           updateHeaderCounts();
       }
   };
 
   const addCartManagementListeners = () => {
-    // Listener for remove buttons
     document.querySelectorAll(".table-trash").forEach(button => {
       button.addEventListener("click", (e) => {
         const itemId = e.target.getAttribute("data-id");
@@ -234,7 +230,6 @@ document.addEventListener("DOMContentLoaded", () => {
       });
     });
 
-    // Listener for quantity inputs
     document.querySelectorAll("#cart-items .quantity").forEach(input => {
       input.addEventListener("change", (e) => {
         const itemId = e.target.getAttribute("data-id");
@@ -249,7 +244,6 @@ document.addEventListener("DOMContentLoaded", () => {
       });
     });
 
-    // *** NEW: Add event listener for the Clear Cart button ***
     const clearCartBtn = document.getElementById('clear-cart-btn');
     if (clearCartBtn) {
         clearCartBtn.addEventListener('click', (e) => {
@@ -262,7 +256,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // --- RENDER WISHLIST PAGE ---
   const renderWishlistPage = () => {
       const wishlistContainer = document.getElementById('wishlist-items');
-      if (!wishlistContainer) return; // Don't run on other pages
+      if (!wishlistContainer) return;
       const wishlist = getWishlist();
       wishlistContainer.innerHTML = '';
 
@@ -286,7 +280,6 @@ document.addEventListener("DOMContentLoaded", () => {
   };
 
   const addWishlistManagementListeners = () => {
-    // Remove from wishlist
     document.querySelectorAll('#wishlist-items .table-trash').forEach(button => {
         button.addEventListener('click', (e) => {
             const itemId = e.target.getAttribute('data-id');
@@ -297,7 +290,6 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     });
     
-    // Add to cart from wishlist
     document.querySelectorAll('.wishlist-to-cart-btn').forEach(button => {
         button.addEventListener('click', (e) => {
             e.preventDefault();
@@ -318,17 +310,20 @@ document.addEventListener("DOMContentLoaded", () => {
   // --- RENDER CHECKOUT PAGE ---
   const renderCheckoutPage = () => {
       const orderItemsContainer = document.getElementById('checkout-order-items');
-      if (!orderItemsContainer) return; // Don't run on other pages
+      if (!orderItemsContainer) return;
       
       const subtotalEl = document.getElementById('checkout-subtotal');
+      const shippingEl = document.getElementById('checkout-shipping');
       const totalEl = document.getElementById('checkout-total');
       const cart = getCart();
       orderItemsContainer.innerHTML = '';
       
-      let subtotal = 0;
+      const subtotal = cart.reduce((total, item) => total + item.price * item.quantity, 0);
+      const shipping = cart.length > 0 ? 10.00 : 0;
+      const total = subtotal + shipping;
+
       cart.forEach(item => {
           const itemTotal = item.quantity * item.price;
-          subtotal += itemTotal;
           const row = document.createElement('tr');
           row.innerHTML = `
               <td><img src="${item.image}" alt="" class="order-img"></td>
@@ -341,10 +336,80 @@ document.addEventListener("DOMContentLoaded", () => {
           orderItemsContainer.appendChild(row);
       });
 
-      const total = subtotal; // Assuming free shipping as per the static HTML
       subtotalEl.textContent = `$${subtotal.toFixed(2)}`;
+      shippingEl.textContent = `$${shipping.toFixed(2)}`;
       totalEl.textContent = `$${total.toFixed(2)}`;
   };
+  
+  // *** NEW: CHECKOUT PROCESSING AND THANK YOU PAGE LOGIC ***
+  const handleCheckout = () => {
+      const placeOrderBtn = document.getElementById('place-order-btn');
+      if (!placeOrderBtn) return;
+
+      placeOrderBtn.addEventListener('click', (e) => {
+          e.preventDefault();
+          const cart = getCart();
+          if (cart.length === 0) {
+              alert("Your cart is empty. Please add items before placing an order.");
+              return;
+          }
+
+          // --- 1. Create Data Layer for Analytics ---
+          const subtotal = cart.reduce((total, item) => total + item.price * item.quantity, 0);
+          const shipping = cart.length > 0 ? 10.00 : 0;
+          const total = subtotal + shipping;
+
+          window.dataLayer = window.dataLayer || [];
+          window.dataLayer.push({
+              'event': 'purchase',
+              'ecommerce': {
+                  'purchase': {
+                      'actionField': {
+                          'id': 'T' + Math.floor(Math.random() * 1000000), // Example Transaction ID
+                          'revenue': total.toFixed(2),
+                          'shipping': shipping.toFixed(2),
+                      },
+                      'products': cart.map(item => ({
+                          'name': item.title,
+                          'id': item.id,
+                          'price': item.price.toFixed(2),
+                          'quantity': item.quantity
+                      }))
+                  }
+              }
+          });
+
+          console.log("DataLayer Push:", window.dataLayer.slice(-1)[0]); // Log for debugging
+
+          // --- 2. Show Thank You Message & Animation ---
+          const checkoutContainer = document.querySelector('.checkout-container');
+          const thankYouMessage = document.getElementById('thank-you-message');
+          
+          checkoutContainer.style.display = 'none';
+          thankYouMessage.classList.add('visible');
+          createSparkles();
+
+          // --- 3. Clear Cart ---
+          saveCart([]);
+          updateHeaderCounts();
+      });
+  };
+
+  const createSparkles = () => {
+      const sparkleContainer = document.querySelector('.sparkles');
+      if (!sparkleContainer) return;
+      sparkleContainer.innerHTML = ''; // Clear old sparkles
+
+      for (let i = 0; i < 30; i++) {
+          const sparkle = document.createElement('span');
+          sparkle.className = 'sparkle';
+          sparkle.style.top = `${Math.random() * 100}%`;
+          sparkle.style.left = `${Math.random() * 100}%`;
+          sparkle.style.animationDelay = `${Math.random() * 1.5}s`;
+          sparkleContainer.appendChild(sparkle);
+      }
+  };
+
 
   /* ================================================
      INITIALIZATION
@@ -355,5 +420,6 @@ document.addEventListener("DOMContentLoaded", () => {
   renderCartPage();
   renderWishlistPage();
   renderCheckoutPage();
+  handleCheckout(); // Initialize the new checkout logic
 
 });
