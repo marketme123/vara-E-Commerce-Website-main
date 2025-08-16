@@ -133,6 +133,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
         <!-- ================================================ CHECKOUT ================================================ -->
         <section class="checkout section-lg">
+            <!-- THIS IS THE MAIN CHECKOUT CONTAINER THAT WILL BE HIDDEN -->
             <div class="checkout-container container grid">
                 <div class="checkout-group">
                     <h3 class="section-title">Billing Details</h3>
@@ -172,7 +173,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                             </tr>
                             <tr>
                                 <td><span class="order-subtitle">Shipping</span></td>
-                                <td colspan="2"><span class="table-price">Free Shipping</span></td>
+                                <td colspan="2"><span class="table-price" id="checkout-shipping">$0.00</span></td>
                             </tr>
                             <tr>
                                 <td><span class="order-subtitle">Total</span></td>
@@ -197,9 +198,20 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                             <label for="" class="payment-label">Cash On Delivery</label>
                         </div>
                     </div>
-                    <button class="btn btn-md">Place Order</button>
+                    <!-- ADDED ID TO THE BUTTON -->
+                    <button class="btn btn-md" id="place-order-btn">Place Order</button>
                 </div>
             </div>
+
+            <!-- NEW: THANK YOU MESSAGE CONTAINER (HIDDEN BY DEFAULT) -->
+            <div id="thank-you-message" class="container">
+                <div class="sparkles"></div>
+                <i class="ri-checkbox-circle-fill thank-you-icon"></i>
+                <h2 class="thank-you-title">Thank You!</h2>
+                <p class="thank-you-text">Your order has been placed successfully.</p>
+                <a href="shop.html" class="btn btn-md">Continue Shopping</a>
+            </div>
+
         </section>
 
         <!-- ================================================ NEWSLETTER ================================================ -->
