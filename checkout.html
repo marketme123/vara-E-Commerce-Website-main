@@ -156,48 +156,31 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                 <div class="checkout-group">
                     <h3 class="section-title">Cart Totals</h3>
                     <table class="order-table">
-                        <tr>
-                            <th colspan="2">Products</th>
-                            <th>Total</th>
-                        </tr>
-                        <tr>
-                            <td><img src="assets/images/product-1-2.jpg" alt="" class="order-img"></td>
-                            <td>
-                                <h3 class="table-title">Yidarton Women Summer Blue</h3>
-                                <p class="table-quantity">x 2</p>
-                            </td>
-                            <td><span class="table-price">$180.00</span></td>
-                        </tr>
-                        <tr>
-                            <td><img src="assets/images/product-2-1.jpg" alt="" class="order-img"></td>
-                            <td>
-                                <h3 class="table-title">LDB MOON Women Summer</h3>
-                                <p class="table-quantity">x 1</p>
-                            </td>
-                            <td><span class="table-price">$65.00</span></td>
-                        </tr>
-                        <tr>
-                            <td><img src="assets/images/product-3-1.jpg" alt="" class="order-img"></td>
-                            <td>
-                                <h3 class="table-title">Women's Short Sleeve Loose</h3>
-                                <p class="table-quantity">x 2</p>
-                            </td>
-                            <td><span class="table-price">$150.00</span></td>
-                        </tr>
-
-                        <tr>
-                            <td><span class="order-subtitle">Subtotal</span></td>
-                            <td colspan="2"><span class="table-price">$280.00</span></td>
-                        </tr>
-                        <tr>
-                            <td><span class="order-subtitle">Shipping</span></td>
-                            <td colspan="2"><span class="table-price">Free Shipping</span></td>
-                        </tr>
-                        <tr>
-                            <td><span class="order-subtitle">Total</span></td>
-                            <td colspan="2"><span class="order-grand-total">$280.00</span></td>
-                        </tr>
+                        <thead>
+                            <tr>
+                                <th colspan="2">Products</th>
+                                <th>Total</th>
+                            </tr>
+                        </thead>
+                        <tbody id="checkout-order-items">
+                            <!-- Product rows will be added here by script.js -->
+                        </tbody>
+                        <tfoot>
+                            <tr>
+                                <td><span class="order-subtitle">Subtotal</span></td>
+                                <td colspan="2"><span class="table-price" id="checkout-subtotal">$0.00</span></td>
+                            </tr>
+                            <tr>
+                                <td><span class="order-subtitle">Shipping</span></td>
+                                <td colspan="2"><span class="table-price">Free Shipping</span></td>
+                            </tr>
+                            <tr>
+                                <td><span class="order-subtitle">Total</span></td>
+                                <td colspan="2"><span class="order-grand-total" id="checkout-total">$0.00</span></td>
+                            </tr>
+                        </tfoot>
                     </table>
+
 
                     <div class="payment-methods">
                         <h3 class="checkout-title payment-title">Payment</h3>
