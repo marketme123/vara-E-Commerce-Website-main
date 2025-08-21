@@ -107,6 +107,21 @@ document.addEventListener("DOMContentLoaded", () => {
     saveCart(cart);
     updateHeaderCounts();
     alert(`${product.title} has been added to your cart!`);
+
+    // GA4 Event
+    window.dataLayer = window.dataLayer || [];
+    window.dataLayer.push({
+        'event': 'add_to_cart',
+        'ecommerce': {
+            'items': [{
+                'item_name': product.title,
+                'item_id': product.id,
+                'price': product.price,
+                'quantity': product.quantity
+            }]
+        }
+    });
+    console.log("DataLayer Push (add_to_cart):", window.dataLayer.slice(-1)[0]);
   };
 
   const addToWishlist = (product) => {
@@ -116,6 +131,21 @@ document.addEventListener("DOMContentLoaded", () => {
       saveWishlist(wishlist);
       updateHeaderCounts();
       alert(`${product.title} has been added to your wishlist!`);
+
+      // GA4 Event
+      window.dataLayer = window.dataLayer || [];
+      window.dataLayer.push({
+          'event': 'add_to_wishlist',
+          'ecommerce': {
+              'items': [{
+                  'item_name': product.title,
+                  'item_id': product.id,
+                  'price': product.price,
+                  'quantity': 1
+              }]
+          }
+      });
+      console.log("DataLayer Push (add_to_wishlist):", window.dataLayer.slice(-1)[0]);
     } else {
       alert(`${product.title} is already in your wishlist.`);
     }
@@ -127,6 +157,32 @@ document.addEventListener("DOMContentLoaded", () => {
       const imageEl = container.querySelector(".product-img.default") || container.querySelector(".detials-img");
       if (!imageEl) return;
       const imageSrc = imageEl.src;
+
+      // Event for selecting an item
+      const productLink = container.querySelector('.product-images, .product-title');
+      if (productLink) {
+          productLink.addEventListener('click', (e) => {
+              const productEl = e.target.closest('.product-item');
+              if (productEl) {
+                  const imageEl = productEl.querySelector('.product-img.default');
+                  const product = {
+                      item_name: productEl.querySelector('.product-title').textContent.trim(),
+                      item_id: imageEl ? imageEl.src : 'N/A',
+                      price: parseFloat(productEl.querySelector('.new-price').textContent.replace('$', '')),
+                      item_category: productEl.querySelector('.product-category').textContent.trim(),
+                  };
+
+                  window.dataLayer = window.dataLayer || [];
+                  window.dataLayer.push({
+                      'event': 'select_item',
+                      'ecommerce': {
+                          'items': [product]
+                      }
+                  });
+                   console.log("DataLayer Push (select_item):", window.dataLayer.slice(-1)[0]);
+              }
+          });
+      }
 
       const cartBtn = container.querySelector(".cart-btn, .details-action .btn");
       if (cartBtn) {
@@ -412,6 +468,120 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
   /* ================================================
+     ANALYTICS-SPECIFIC FUNCTIONS
+     ================================================ */
+
+  // --- PUSH VIEW ITEM LIST EVENT ---
+  const pushViewItemListEvent = () => {
+    const productItems = document.querySelectorAll(".product-item");
+    if (productItems.length > 0) {
+      const items = [];
+      productItems.forEach((productEl, index) => {
+        const titleEl = productEl.querySelector(".product-title");
+        const priceEl = productEl.querySelector(".new-price");
+        const categoryEl = productEl.querySelector(".product-category");
+        const imageEl = productEl.querySelector(".product-img.default");
+
+        if (titleEl && priceEl && categoryEl) {
+            items.push({
+              item_name: titleEl.textContent.trim(),
+              item_id: imageEl ? imageEl.src : "N/A",
+              price: parseFloat(priceEl.textContent.replace("$", "")),
+              item_category: categoryEl.textContent.trim(),
+              index: index + 1,
+            });
+        }
+      });
+
+      if (items.length > 0) {
+        window.dataLayer = window.dataLayer || [];
+        window.dataLayer.push({
+          event: "view_item_list",
+          ecommerce: {
+            items: items,
+          },
+        });
+        console.log("DataLayer Push (view_item_list):", window.dataLayer.slice(-1)[0]);
+      }
+    }
+  };
+
+  const handleBeginCheckout = () => {
+    const checkoutBtn = document.getElementById("proceed-to-checkout-btn");
+    if (checkoutBtn) {
+      checkoutBtn.addEventListener("click", () => {
+        const cart = getCart();
+        const items = cart.map(item => ({
+          item_name: item.title,
+          item_id: item.id,
+          price: item.price,
+          quantity: item.quantity
+        }));
+
+        window.dataLayer = window.dataLayer || [];
+        window.dataLayer.push({
+          event: "begin_checkout",
+          ecommerce: {
+            items: items,
+          },
+        });
+        console.log("DataLayer Push (begin_checkout):", window.dataLayer.slice(-1)[0]);
+      });
+    }
+  };
+
+  const handleLogin = () => {
+    const loginBtn = document.getElementById("login-btn");
+    if (loginBtn) {
+      loginBtn.addEventListener("click", (e) => {
+        e.preventDefault();
+        window.dataLayer = window.dataLayer || [];
+        window.dataLayer.push({
+          event: "login",
+          method: "email"
+        });
+        console.log("DataLayer Push (login):", window.dataLayer.slice(-1)[0]);
+        alert("Login button clicked (event pushed to dataLayer).");
+      });
+    }
+  };
+
+  const handleSignUp = () => {
+    const signUpBtn = document.getElementById("register-btn");
+    if (signUpBtn) {
+      signUpBtn.addEventListener("click", (e) => {
+        e.preventDefault();
+        window.dataLayer = window.dataLayer || [];
+        window.dataLayer.push({
+          event: "sign_up",
+          method: "email"
+        });
+        console.log("DataLayer Push (sign_up):", window.dataLayer.slice(-1)[0]);
+        alert("Sign up button clicked (event pushed to dataLayer).");
+      });
+    }
+  };
+
+  const handleSearch = () => {
+    const searchBtn = document.querySelector(".search-btn");
+    if (searchBtn) {
+      searchBtn.addEventListener("click", (e) => {
+        e.preventDefault();
+        const searchInput = document.querySelector(".header-search .form-input");
+        if (searchInput && searchInput.value) {
+          window.dataLayer = window.dataLayer || [];
+          window.dataLayer.push({
+            event: "search",
+            search_term: searchInput.value,
+          });
+          console.log("DataLayer Push (search):", window.dataLayer.slice(-1)[0]);
+          alert(`Search for "${searchInput.value}" (event pushed to dataLayer).`);
+        }
+      });
+    }
+  };
+
+  /* ================================================
      INITIALIZATION
      ================================================ */
   updateHeaderCounts();
@@ -421,5 +591,10 @@ document.addEventListener("DOMContentLoaded", () => {
   renderWishlistPage();
   renderCheckoutPage();
   handleCheckout(); // Initialize the new checkout logic
+  pushViewItemListEvent(); // Fire on page load
+  handleBeginCheckout();
+  handleLogin();
+  handleSignUp();
+  handleSearch();
 
 });
